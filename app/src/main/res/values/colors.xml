@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="trackedColor">#01fd0e</color>
+    <color name="currentUnTrackedColor">#fd011e</color>
+    <color name="needAdditionalTrackColor">#790505</color>
+    <color name="unTrackedColor">#878c87</color>
+    <color name="moreTrackedTime">#04710a</color>
+</resources>

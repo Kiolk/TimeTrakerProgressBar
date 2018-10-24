@@ -1,0 +1,13 @@
+<resources>
+    <declare-styleable name="TimeSheetBar">
+        <attr name="barHeight" format="dimension" />
+        <attr name="trackedTimeColor" format="color"/>
+        <attr name="unTrackedTimeColor" format="color"/>
+        <attr name="moreTrackedTimeColor" format="color"/>
+        <attr name="dayNeedTrackTimeColor" format="color"/>
+        <attr name="additionalNeedTrackTimeColor" format="color"/>
+            <!--<enum name="left" value="0"/>-->
+            <!--<enum name="right" value="1"/>-->
+        <!--</attr>-->
+    </declare-styleable>
+</resources>
