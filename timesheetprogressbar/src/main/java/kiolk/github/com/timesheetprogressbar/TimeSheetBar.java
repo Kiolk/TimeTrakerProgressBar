@@ -153,19 +153,45 @@ public class TimeSheetBar extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        long trackedDiifTime = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
+        float trackedBlockWidth;
 
-        drawTrackedBlock(canvas);
+        if(trackedDiifTime == mTrackedSeconds){
+            float trackedPercent =  (mTrackedSeconds / mRequiredSeconds);
+            trackedBlockWidth = getWidth() * trackedPercent;
+        }else if(trackedDiifTime > mTrackedSeconds){
 
-        canvas.drawRect(0, 0, getWidth(), getmProgresHeight(), mBackgroundPaint);
-        canvas.drawRect(0, 0, 100, getmProgresHeight(), mTrackedTimePaint);
-        canvas.drawRect(100, 0, 200, getmProgresHeight(), mMoreTrackedTimePaint);
-        canvas.drawRect(200, 0, 300, getmProgresHeight(), mNeedTrackTimePaint);
-        canvas.drawRect(300, 0, 400, getmProgresHeight(), mCurrentUnTrackPaint);
-    }
+        }
 
-    private void drawTrackedBlock(Canvas canvas) {
-        if(mRequiredSecondsRelativeToday == mStandardDayWorkDurationSeconds){
-//            mRectF()
+
+        if(mTrackedSeconds == (mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds)){
+            float trackedPercent =  (mTrackedSeconds / mRequiredSeconds);
+            float trackedBlockWidth = getWidth() * trackedPercent;
+            mRectF.left = 0;
+            mRectF.top = 0;
+            mRectF.right = trackedBlockWidth;
+            mRectF.bottom = getmProgresHeight();
+            drawSingleBlock(canvas, mRectF, mTrackedTimePaint);
+
+            float curentReqeiredPercent = mStandardDayWorkDurationSeconds / mRequiredSeconds;
+            float currentBlockWidth = getWidth() * curentReqeiredPercent;
+            mRectF.left = trackedBlockWidth;
+            mRectF.top = 0;
+            mRectF.right = trackedBlockWidth + currentBlockWidth ;
+            mRectF.bottom = getmProgresHeight();
+            drawSingleBlock(canvas, mRectF, mCurrentUnTrackPaint);
+
+            float unTrackedPercent = (mRequiredSeconds - mStandardDayWorkDurationSeconds - mTrackedSeconds)/ mRequiredSeconds;
+            float unTrakedBlockWidth = getWidth() * unTrackedPercent;
+            mRectF.left = trackedBlockWidth +currentBlockWidth ;
+            mRectF.top = 0;
+            mRectF.right = trackedBlockWidth + curentReqeiredPercent + unTrakedBlockWidth;
+            mRectF.bottom = getmProgresHeight();
+            drawSingleBlock(canvas, mRectF, mCurrentUnTrackPaint);
+        }else if(mTrackedSeconds > (mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds)
+                && mTrackedSeconds < mRequiredSecondsRelativeToday){
+
+
         }
     }
 
