@@ -8,4 +8,5 @@
     <color name="needAdditionalTrackColor">#790505</color>
     <color name="unTrackedColor">#878c87</color>
     <color name="moreTrackedTime">#04710a</color>
+    <color name="moreCurrentDayTrackedColor">#45ebed</color>
 </resources>

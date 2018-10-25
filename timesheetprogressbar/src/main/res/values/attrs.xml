@@ -4,8 +4,13 @@
         <attr name="trackedTimeColor" format="color"/>
         <attr name="unTrackedTimeColor" format="color"/>
         <attr name="moreTrackedTimeColor" format="color"/>
+        <attr name="moreCurrentDayTrakedTimeColor" format="color"/>
         <attr name="dayNeedTrackTimeColor" format="color"/>
         <attr name="additionalNeedTrackTimeColor" format="color"/>
+        <attr name="barType" format="enum">
+            <enum name="overlaid" value="0"/>
+            <enum name="divided" value="1"/>
+        </attr>
             <!--<enum name="left" value="0"/>-->
             <!--<enum name="right" value="1"/>-->
         <!--</attr>-->
