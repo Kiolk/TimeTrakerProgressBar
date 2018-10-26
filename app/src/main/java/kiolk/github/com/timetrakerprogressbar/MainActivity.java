@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         bar2 = findViewById(R.id.time_bar_2);
         bar3 = findViewById(R.id.time_bar_3);
         bar4 = findViewById(R.id.time_bar_4);
+        bar4.setProgressHeight(200);
 
         setBar(bar, 576000, 144000, 172800);
         setBar(bar1, 576000, 133200, 172800);
@@ -32,9 +33,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setBar(TimeSheetBar bar, int required, int tracked, int currentNeed) {
-        bar.setmProgressHeight(120f);
-        bar.setmRequiredSeconds(required);
-        bar.setmTrackedSeconds(tracked);
-        bar.setmRequiredSecondsRelativeToday(currentNeed);
+        bar.setRequiredSeconds(required);
+        bar.setTrackedSeconds(tracked);
+        bar.setRequiredSecondsRelativeToday(currentNeed);
     }
 }
