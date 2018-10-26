@@ -12,6 +12,7 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -32,6 +33,7 @@ public class TimeSheetBar extends View {
     public static final long EIGHT_HOURS_WORK_DAY = 28800;
     public static final float ONE_HOUR = 3600f;
     public static final int DEFAULT_MAX_BAR_HEIGHT = 200;
+    private static final String EMPTY_STRING = "";
 
     private RectF mRectF;
     private Rect mTmpRect;
@@ -70,6 +72,7 @@ public class TimeSheetBar extends View {
     private long mRequiredSeconds = 576000;
     private long mRequiredSecondsRelativeToday = EIGHT_HOURS_WORK_DAY;
     private long mStandardDayWorkDurationSeconds = EIGHT_HOURS_WORK_DAY;
+    private String mBarTitle = "";
 
     private long mTrackedBeforeTodaySeconds = 0;
     private long mNeedTrackSeconds = 0;
@@ -217,6 +220,15 @@ public class TimeSheetBar extends View {
         this.mStrokeColor = mStrokeColor;
     }
 
+    public String getBarTitle() {
+        return mBarTitle;
+    }
+
+    public void setBarTitle(String mBarTitle) {
+        invalidate();
+        this.mBarTitle = mBarTitle;
+    }
+
     private void init(AttributeSet attrs) {
 
         TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.TimeSheetBar, 0, 0);
@@ -230,6 +242,7 @@ public class TimeSheetBar extends View {
         mTextColor = typedArray.getColor(R.styleable.TimeSheetBar_barTextColor, TEXT_DEFAULT_COLOR);
         mStrokeColor = typedArray.getColor(R.styleable.TimeSheetBar_barStrokeColor, STROKE_DEFAULT_COLOR);
         mProgressHeight = typedArray.getDimension(R.styleable.TimeSheetBar_maxBarHeight, DEFAULT_MAX_BAR_HEIGHT);
+        mBarTitle = typedArray.getString(R.styleable.TimeSheetBar_barTitle);
         mBarType = typedArray.getInt(R.styleable.TimeSheetBar_barType, BarType.DIVIDED.getType());
 
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -268,7 +281,6 @@ public class TimeSheetBar extends View {
         mTextPaint.setColor(mTextColor);
         mTextPaint.setStyle(Paint.Style.FILL);
         mTextPaint.setTextSize(mProgressHeight / 2);
-        mTextPaint.setTextAlign(Paint.Align.CENTER);
 
         mStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mStrokePaint.setStyle(Paint.Style.STROKE);
@@ -380,20 +392,21 @@ public class TimeSheetBar extends View {
 
         drawViewBorder(canvas);
 
-        attachBarTitle(canvas, "Title");
+        attachBarTitle(canvas);
 
         switch (BarType.getType(mBarType)) {
             case DIVIDED:
                 float shiftPosition = getPaddingLeft();
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, trackedBlockWidth, mTrackedTimePaint);
-                attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds);
+                attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds, trackedBlockWidth);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, needTrackBlockWidth, mNeedTrackTimePaint);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, moreCurrentDayTrackedBlockWidth, mMoreCurrentDayTrackedTimePaint);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentUnTrackPaint);
 //                attachLable(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds);
+//                attachText(canvas, shiftPosition, moreTrackedTimeBlockWidth, mMoreTrackedSeconds, moreTrackedTimeBlockWidth );
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, moreTrackedTimeBlockWidth, mMoreTrackedTimePaint);
                 drawSingleBlock(canvas, shiftPosition, unTrackedTimeBlockWidth, mBackgroundPaint);
-                attachText(canvas, shiftPosition, unTrackedTimeBlockWidth, mUnTrackedTime);
+                attachText(canvas, shiftPosition, unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
                 break;
             case OVERLAID:
                 drawSingleBlock(canvas, getPaddingLeft(), mViewWidth, mBackgroundPaint);
@@ -409,21 +422,21 @@ public class TimeSheetBar extends View {
                 drawSingleBlock(canvas, getPaddingLeft(), needTrackBlockWidthFromStart, mNeedTrackTimePaint);
                 drawSingleBlock(canvas, getPaddingLeft(), trackedBlockWidthFromStart, mTrackedTimePaint);
 
-                attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds);
-                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + needTrackBlockWidth + moreTrackedTimeBlockWidth, unTrackedTimeBlockWidth, mUnTrackedTime);
+                attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds, trackedBlockWidth);
+                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + needTrackBlockWidth + moreTrackedTimeBlockWidth + getPaddingLeft(), unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
                 break;
         }
 
         canvas.drawPath(new Path(), mBackgroundPaint);
     }
 
-    private void attachBarTitle(Canvas canvas, String title) {
-        if (mViewHeight / 3 >= mProgressHeight) {
+    private void attachBarTitle(Canvas canvas) {
+        if (mViewHeight / 2.5 < mProgressHeight) {
             return;
         }
 
         mTextPaint.setTextSize(mProgressHeight / 2);
-        mTextPaint.getTextBounds(title, 0, title.length(), mTmpRect);
+        mTextPaint.getTextBounds(mBarTitle.toUpperCase(), 0, mBarTitle.length(), mTmpRect);
         float textWidth = mTmpRect.right - mTmpRect.left;
         float textHeight = mTmpRect.bottom - mTmpRect.top;
 
@@ -434,7 +447,8 @@ public class TimeSheetBar extends View {
         float startX = (mViewWidth - textWidth) / 2;
         float startY = ((mViewHeight / 3) - textHeight) / 2 + textHeight;
 
-        canvas.drawText(title, startX + getPaddingLeft(), startY + getPaddingTop(), mTextPaint);
+        mTextPaint.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText(mBarTitle.toUpperCase(), startX + getPaddingLeft(), startY + getPaddingTop(), mTextPaint);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -442,7 +456,7 @@ public class TimeSheetBar extends View {
         canvas.drawRoundRect((float) getPaddingLeft(), (float) getPaddingTop(), (float) getWidth() - getPaddingRight(), getHeight() - (float) getPaddingBottom(), 10, 10, mStrokePaint);
     }
 
-    private void attachText(Canvas canvas, float startBlockX, float endBlockX, long durationSeconds) {
+    private void attachText(Canvas canvas, float startBlockX, float endBlockX, long durationSeconds, float blockWidth) {
         if (mProgressHeight < 40) {
             return;
         }
@@ -451,15 +465,20 @@ public class TimeSheetBar extends View {
         String text = String.valueOf(durationSeconds / ONE_HOUR) + " h";
         Rect r = new Rect();
         mTextPaint.getTextBounds(text, 0, text.length(), r);
-        float height = r.bottom - r.top;
+        float textHeight = r.bottom - r.top;
+        float textWidth = r.right -r.left;
 
-
-        if (mViewHeight / 2 >= mProgressHeight) {
-            textStartPoint = ((mViewHeight / 6) * 5) + height / 2 + getPaddingTop();
-        } else {
-            textStartPoint = mViewHeight / 2 + height / 2 + getPaddingTop();
+        if(textWidth > blockWidth){
+            return;
         }
 
+        if (mViewHeight / 2 >= mProgressHeight) {
+            textStartPoint = ((mViewHeight / 6) * 5) + textHeight / 2 + getPaddingTop();
+        } else {
+            textStartPoint = mViewHeight / 2 + textHeight / 2 + getPaddingTop();
+        }
+
+        mTextPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(String.valueOf(durationSeconds / ONE_HOUR) + " h",
                 startBlockX + (endBlockX / 2),
                 textStartPoint,
@@ -489,7 +508,7 @@ public class TimeSheetBar extends View {
     }
 
     private float calculateBlockWidth(long pValue) {
-        return mViewWidth * (pValue / (float) mRequiredSeconds);
+        return mViewWidth * (pValue / (float) Math.max(mRequiredSeconds, mTrackedSeconds));
     }
 
     private void drawSingleBlock(Canvas canvas, RectF block, Paint paint) {

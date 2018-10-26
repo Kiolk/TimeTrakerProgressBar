@@ -13,6 +13,8 @@ public class MainActivity extends AppCompatActivity {
     private TimeSheetBar bar3;
     private TimeSheetBar bar4;
     private static final int THREE_HOUR = 10800;
+    private static final int WORK_DAY = 28800;
+    private static final int WORK_MONTH = 633600;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,11 +27,11 @@ public class MainActivity extends AppCompatActivity {
         bar4 = findViewById(R.id.time_bar_4);
         bar4.setProgressHeight(200);
 
-        setBar(bar, 576000, 144000, 172800);
-        setBar(bar1, 576000, 133200, 172800);
-        setBar(bar2, 576000, 144000 + THREE_HOUR, 172800);
-        setBar(bar3, 576000, 144000 + THREE_HOUR *2, 172800);
-        setBar(bar4, 576000, 144000 + THREE_HOUR * 3, 172800);
+        setBar(bar, WORK_MONTH, WORK_DAY* 1, WORK_DAY * 2);
+        setBar(bar1, WORK_MONTH, WORK_DAY * 8 + THREE_HOUR, WORK_DAY * 9);
+        setBar(bar2, WORK_MONTH, WORK_DAY * 15  - THREE_HOUR * 2, WORK_DAY * 16);
+        setBar(bar3, WORK_MONTH, WORK_DAY * 21 + THREE_HOUR * 4, WORK_DAY * 22);
+        setBar(bar4, WORK_MONTH, WORK_DAY * 5 + THREE_HOUR * 3, WORK_DAY * 10);
     }
 
     private void setBar(TimeSheetBar bar, int required, int tracked, int currentNeed) {

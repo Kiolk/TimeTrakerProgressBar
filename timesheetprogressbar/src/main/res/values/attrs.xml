@@ -13,5 +13,6 @@
         </attr>
         <attr name="barStrokeColor" format="color"/>
         <attr name="barTextColor" format="color"/>
+        <attr name="barTitle" format="string"/>
     </declare-styleable>
 </resources>
