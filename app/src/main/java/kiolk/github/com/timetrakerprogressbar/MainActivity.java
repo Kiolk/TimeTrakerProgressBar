@@ -38,5 +38,6 @@ public class MainActivity extends AppCompatActivity {
         bar.setRequiredSeconds(required);
         bar.setTrackedSeconds(tracked);
         bar.setRequiredSecondsRelativeToday(currentNeed);
+        bar.setLabelUnder(true);
     }
 }

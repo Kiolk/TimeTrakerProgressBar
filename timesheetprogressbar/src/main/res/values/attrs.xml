@@ -16,5 +16,7 @@
         <attr name="barTitle" format="string" />
         <!--Try show label of indicator under bar. It possible happen if view has enough space-->
         <attr name="isLabelUnder" format="boolean" />
+        <attr name="isAnimated" format="boolean" />
+        <attr name="animationDuration" format="integer"/>
     </declare-styleable>
 </resources>

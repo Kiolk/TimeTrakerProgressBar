@@ -1,5 +1,6 @@
 package kiolk.github.com.timesheetprogressbar;
 
+import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -16,7 +17,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 /**
- * @attr ref android.R.styleable#TimeSheetBar_isLabelUnder
  */
 public class TimeSheetBar extends View {
 
@@ -38,6 +38,8 @@ public class TimeSheetBar extends View {
     private static final String EMPTY_STRING = "";
     public static final float MIN_PROGRESS_WIDTH = 200f;
     public static final float MIN_PROGRESS_HEIGHT = 40f;
+    public static final int FINAL_ANIMATION_FACTOR_VALUE = 100;
+    public static final int DEFAULT_ANIMATION_DURATION_MILLISECONDS = 1000;
 
     private RectF mRectF;
     private Rect mTmpRect;
@@ -56,11 +58,13 @@ public class TimeSheetBar extends View {
     private float startPointY = 0;
 
     private int mBarType;
+    private int mAnimationDuration;
     private float mProgressHeight = MIN_PROGRESS_HEIGHT;
     private float mProgressWidth = MIN_PROGRESS_WIDTH;
     private float mViewHeight;
     private float mViewWidth;
     private boolean isLabelUnder;
+    private boolean isAnimated;
 
     private int mTrackedTimeColor;
     private int mUnTrackedTimeColor;
@@ -79,10 +83,13 @@ public class TimeSheetBar extends View {
 
     private long mTrackedBeforeTodaySeconds = 0;
     private long mNeedTrackSeconds = 0;
-    private long mCurrentTrackedSecconds = 0;
+    private long mCurrentTrackedSeconds = 0;
     private long mMoreTrackedSeconds = 0;
     private long mCurrentNeedTrakSeconds = 0;
     private long mUnTrackedTime = 0;
+
+    private ObjectAnimator mAnimator;
+    private float animationFactor = FINAL_ANIMATION_FACTOR_VALUE;
 
     public TimeSheetBar(Context context) {
         super(context);
@@ -111,6 +118,11 @@ public class TimeSheetBar extends View {
     }
 
     public void setTrackedSeconds(long mTrackedSeconds) {
+        invalidate();
+        this.mTrackedSeconds = mTrackedSeconds;
+    }
+
+    public void setTrackedSeconds(int mTrackedSeconds) {
         invalidate();
         this.mTrackedSeconds = mTrackedSeconds;
     }
@@ -238,11 +250,21 @@ public class TimeSheetBar extends View {
 
     /**
      * Set possibility display labels for indicator under bar.
+     *
      * @param labelUnder - if true try show under bar, else show information inside bar.
      */
     public void setLabelUnder(boolean labelUnder) {
         isLabelUnder = labelUnder;
         invalidate();
+    }
+
+    private float getAnimationFactor() {
+        return animationFactor;
+    }
+
+    private void setAnimationFactor(float mAnimationFactor) {
+        invalidate();
+        this.animationFactor = mAnimationFactor;
     }
 
     private void init(AttributeSet attrs) {
@@ -260,6 +282,8 @@ public class TimeSheetBar extends View {
         mProgressHeight = typedArray.getDimension(R.styleable.TimeSheetBar_maxBarHeight, MIN_PROGRESS_HEIGHT);
         isLabelUnder = typedArray.getBoolean(R.styleable.TimeSheetBar_isLabelUnder, false);
         mBarTitle = typedArray.getString(R.styleable.TimeSheetBar_barTitle);
+        isAnimated = typedArray.getBoolean(R.styleable.TimeSheetBar_isAnimated, false);
+        mAnimationDuration = typedArray.getInt(R.styleable.TimeSheetBar_animationDuration, DEFAULT_ANIMATION_DURATION_MILLISECONDS);
 
         mBarType = typedArray.getInt(R.styleable.TimeSheetBar_barType, BarType.DIVIDED.getType());
 
@@ -308,6 +332,18 @@ public class TimeSheetBar extends View {
 //        mRectF = new RectF(0, heightRec, widthRec, 0);
         mRectF = new RectF(0, 0, 0, 0);
         mTmpRect = new Rect();
+
+        animated();
+    }
+
+    private void animated() {
+        if(!isAnimated){
+            return;
+        }
+
+        mAnimator = ObjectAnimator.ofFloat(this, "animationFactor", FINAL_ANIMATION_FACTOR_VALUE);
+        mAnimator.setDuration(mAnimationDuration);
+        mAnimator.start();
     }
 
     private void calculateTimersSeconds() {
@@ -316,14 +352,15 @@ public class TimeSheetBar extends View {
         mUnTrackedTime = mRequiredSeconds - mRequiredSecondsRelativeToday;
 
         if (trackedDiffTime > mTrackedSeconds) {
-            mNeedTrackSeconds = trackedDiffTime;
+            mCurrentNeedTrakSeconds = mStandardDayWorkDurationSeconds;
+            mNeedTrackSeconds = trackedDiffTime - mTrackedSeconds;
         } else if (trackedDiffTime < mTrackedSeconds && mTrackedSeconds < mRequiredSecondsRelativeToday) {
             mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
-            mCurrentTrackedSecconds = mTrackedSeconds - mTrackedBeforeTodaySeconds;
-            mCurrentNeedTrakSeconds = mStandardDayWorkDurationSeconds - mCurrentTrackedSecconds;
+            mCurrentTrackedSeconds = mTrackedSeconds - mTrackedBeforeTodaySeconds;
+            mCurrentNeedTrakSeconds = mStandardDayWorkDurationSeconds - mCurrentTrackedSeconds;
         } else if (mTrackedSeconds > mRequiredSecondsRelativeToday) {
             mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
-            mCurrentTrackedSecconds = mStandardDayWorkDurationSeconds;
+            mCurrentTrackedSeconds = mStandardDayWorkDurationSeconds;
             mMoreTrackedSeconds = mTrackedSeconds - mRequiredSecondsRelativeToday;
             mCurrentNeedTrakSeconds = 0;
             mUnTrackedTime = mUnTrackedTime - mMoreTrackedSeconds;
@@ -381,11 +418,6 @@ public class TimeSheetBar extends View {
             setProgressHeight(mViewHeight);
         }
 
-//        height = height - paddingY;
-//        int size = (width > height) ? width : height;
-//        heightRec = size;
-//        widthRec = size;
-
         setMeasuredDimension(selectedWidth, selectedHeight);
     }
 
@@ -438,11 +470,15 @@ public class TimeSheetBar extends View {
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, trackedBlockWidth, mTrackedTimePaint);
                 attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds, trackedBlockWidth);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, needTrackBlockWidth, mNeedTrackTimePaint);
+                attachText(canvas, shiftPosition - needTrackBlockWidth, needTrackBlockWidth, mNeedTrackSeconds, needTrackBlockWidth);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, moreCurrentDayTrackedBlockWidth, mMoreCurrentDayTrackedTimePaint);
+                attachText(canvas, shiftPosition - moreCurrentDayTrackedBlockWidth, moreCurrentDayTrackedBlockWidth, mCurrentTrackedSeconds, moreCurrentDayTrackedBlockWidth);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentUnTrackPaint);
+                attachText(canvas, shiftPosition - needCurrentTodayTrackBlockWidth, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds, needCurrentTodayTrackBlockWidth);
 //                attachLable(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds);
 //                attachText(canvas, shiftPosition, moreTrackedTimeBlockWidth, mMoreTrackedSeconds, moreTrackedTimeBlockWidth );
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, moreTrackedTimeBlockWidth, mMoreTrackedTimePaint);
+                attachText(canvas, shiftPosition - moreTrackedTimeBlockWidth, moreTrackedTimeBlockWidth, mMoreTrackedSeconds,moreTrackedTimeBlockWidth);
                 drawSingleBlock(canvas, shiftPosition, unTrackedTimeBlockWidth, mBackgroundPaint);
                 attachText(canvas, shiftPosition, unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
                 break;
@@ -452,16 +488,20 @@ public class TimeSheetBar extends View {
                 float needTrackBlockWidthFromStart = trackedBlockWidthFromStart + needTrackBlockWidth;
                 float moreCurrentDayTrackedBlockWidthFromStart = needTrackBlockWidthFromStart + moreCurrentDayTrackedBlockWidth;
                 float needCurrentTodayTrackBlockWidthFromStart = moreCurrentDayTrackedBlockWidthFromStart + needCurrentTodayTrackBlockWidth;
-                float moreTrakedTimeBlockWidthFromStart = needCurrentTodayTrackBlockWidthFromStart + moreTrackedTimeBlockWidth;
+                float moreTrackedTimeBlockWidthFromStart = needCurrentTodayTrackBlockWidthFromStart + moreTrackedTimeBlockWidth;
 
-                drawSingleBlock(canvas, getPaddingLeft(), moreTrakedTimeBlockWidthFromStart, mMoreTrackedTimePaint);
+                drawSingleBlock(canvas, getPaddingLeft(), moreTrackedTimeBlockWidthFromStart, mMoreTrackedTimePaint);
                 drawSingleBlock(canvas, getPaddingLeft(), needCurrentTodayTrackBlockWidthFromStart, mCurrentUnTrackPaint);
                 drawSingleBlock(canvas, getPaddingLeft(), moreCurrentDayTrackedBlockWidthFromStart, mMoreCurrentDayTrackedTimePaint);
                 drawSingleBlock(canvas, getPaddingLeft(), needTrackBlockWidthFromStart, mNeedTrackTimePaint);
                 drawSingleBlock(canvas, getPaddingLeft(), trackedBlockWidthFromStart, mTrackedTimePaint);
 
                 attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds, trackedBlockWidth);
-                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + needTrackBlockWidth + moreTrackedTimeBlockWidth + getPaddingLeft(), unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
+                attachText(canvas, getPaddingLeft() + trackedBlockWidth, needTrackBlockWidth, mNeedTrackSeconds, needTrackBlockWidth);
+                attachText(canvas, trackedBlockWidth + getPaddingLeft(), moreCurrentDayTrackedBlockWidth, mCurrentTrackedSeconds, moreCurrentDayTrackedBlockWidth);
+                attachText(canvas, getPaddingLeft() + trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds, needCurrentTodayTrackBlockWidth);
+                attachText(canvas, trackedBlockWidth + moreCurrentDayTrackedBlockWidth + getPaddingLeft(), moreTrackedTimeBlockWidth, mMoreTrackedSeconds, moreTrackedTimeBlockWidth);
+                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + moreTrackedTimeBlockWidth + getPaddingLeft(), unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
                 break;
         }
 
@@ -521,6 +561,11 @@ public class TimeSheetBar extends View {
         }
 
         mTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        if(isAnimated && animationFactor < FINAL_ANIMATION_FACTOR_VALUE){
+            return;
+        }
+
         canvas.drawText(String.valueOf(durationSeconds / ONE_HOUR) + " h",
                 startBlockX + (endBlockX / 2),
                 textStartPoint,
@@ -539,13 +584,21 @@ public class TimeSheetBar extends View {
         canvas.drawCircle(targetX, targetY, radius, mLabelPaint);
     }
 
-    private float drawSingleBlock(Canvas canvas, float startPoint, float blockWidth, Paint mTrackedTimePaint) {
+    private float drawSingleBlock(final Canvas canvas, float startPoint, float blockWidth, final Paint mTrackedTimePaint) {
         mRectF.left = startPoint;
         mRectF.top = (mViewHeight / 2) - (getProgressHeight() / 2) + getPaddingTop();
-        mRectF.right = blockWidth + startPoint;
+
+        float rightBorder = startPoint;
+        rightBorder = startPoint + blockWidth * (animationFactor / 100);
+
+        mRectF.right = rightBorder;
+
+
         mRectF.bottom = mRectF.top + getProgressHeight();
+
         drawSingleBlock(canvas, mRectF, mTrackedTimePaint);
         drawSingleBlock(canvas, mRectF, mStrokePaint);
+
         return blockWidth + startPoint;
     }
 
