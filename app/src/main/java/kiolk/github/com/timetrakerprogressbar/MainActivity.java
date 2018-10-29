@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         bar2 = findViewById(R.id.time_bar_2);
         bar3 = findViewById(R.id.time_bar_3);
         bar4 = findViewById(R.id.time_bar_4);
-        bar4.setProgressHeight(200);
+//        bar4.setProgressHeight(200);
 
         setBar(bar, WORK_MONTH, WORK_DAY* 1, WORK_DAY * 2);
         setBar(bar1, WORK_MONTH, WORK_DAY * 8 + THREE_HOUR, WORK_DAY * 9);

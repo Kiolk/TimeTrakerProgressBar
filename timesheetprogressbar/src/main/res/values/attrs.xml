@@ -1,18 +1,20 @@
 <resources>
     <declare-styleable name="TimeSheetBar">
         <attr name="maxBarHeight" format="dimension" />
-        <attr name="trackedTimeColor" format="color"/>
-        <attr name="unTrackedTimeColor" format="color"/>
-        <attr name="moreTrackedTimeColor" format="color"/>
-        <attr name="moreCurrentDayTrakedTimeColor" format="color"/>
-        <attr name="dayNeedTrackTimeColor" format="color"/>
-        <attr name="additionalNeedTrackTimeColor" format="color"/>
+        <attr name="trackedTimeColor" format="color" />
+        <attr name="unTrackedTimeColor" format="color" />
+        <attr name="moreTrackedTimeColor" format="color" />
+        <attr name="moreCurrentDayTrakedTimeColor" format="color" />
+        <attr name="dayNeedTrackTimeColor" format="color" />
+        <attr name="additionalNeedTrackTimeColor" format="color" />
         <attr name="barType" format="enum">
-            <enum name="overlaid" value="1"/>
-            <enum name="divided" value="0"/>
+            <enum name="overlaid" value="1" />
+            <enum name="divided" value="0" />
         </attr>
-        <attr name="barStrokeColor" format="color"/>
-        <attr name="barTextColor" format="color"/>
-        <attr name="barTitle" format="string"/>
+        <attr name="barStrokeColor" format="color" />
+        <attr name="barTextColor" format="color" />
+        <attr name="barTitle" format="string" />
+        <!--Try show label of indicator under bar. It possible happen if view has enough space-->
+        <attr name="isLabelUnder" format="boolean" />
     </declare-styleable>
 </resources>

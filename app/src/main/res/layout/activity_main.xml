@@ -1,75 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:orientation="vertical"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <kiolk.github.com.timesheetprogressbar.TimeSheetBar
-        android:layout_margin="20dp"
-        android:id="@+id/time_bar"
-        android:layout_centerInParent="true"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        app:barType="overlaid"/>
-
-    <kiolk.github.com.timesheetprogressbar.TimeSheetBar
-        android:layout_margin="20dp"
-        android:id="@+id/time_bar_1"
-        android:layout_centerInParent="true"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:paddingRight="10dp"
-        app:trackedTimeColor="@color/trackedColor"
-        app:unTrackedTimeColor="@color/unTrackedColor"
-        app:moreTrackedTimeColor="@color/moreTrackedTime"
-        app:dayNeedTrackTimeColor="@color/currentUnTrackedColor"
-        app:additionalNeedTrackTimeColor="@color/needAdditionalTrackColor"
-        app:moreCurrentDayTrakedTimeColor="@color/moreCurrentDayTrackedColor"
-        app:barType="overlaid"/>
-
-    <kiolk.github.com.timesheetprogressbar.TimeSheetBar
-        android:layout_margin="20dp"
-        android:id="@+id/time_bar_2"
-        android:layout_centerInParent="true"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:paddingBottom="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
-        app:barType="overlaid"
-        app:trackedTimeColor="@color/trackedColor"
-        app:unTrackedTimeColor="@color/unTrackedColor"
-        app:moreTrackedTimeColor="@color/moreTrackedTime"
-        app:dayNeedTrackTimeColor="@color/currentUnTrackedColor"
-        app:additionalNeedTrackTimeColor="@color/needAdditionalTrackColor"
-        app:moreCurrentDayTrakedTimeColor="@color/moreCurrentDayTrackedColor"/>
-
-    <kiolk.github.com.timesheetprogressbar.TimeSheetBar
-        android:id="@+id/time_bar_3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_margin="20dp"
-        android:paddingBottom="10dp"
-        android:paddingLeft="10dp"
-        app:barTitle="test bar title"
-        android:paddingTop="10dp"
-        app:additionalNeedTrackTimeColor="@color/needAdditionalTrackColor"
-        app:dayNeedTrackTimeColor="@color/currentUnTrackedColor"
-        app:moreCurrentDayTrakedTimeColor="@color/moreCurrentDayTrackedColor"
-        app:moreTrackedTimeColor="@color/moreTrackedTime"
-        app:trackedTimeColor="@color/trackedColor"
-        app:unTrackedTimeColor="@color/unTrackedColor"
-        app:barType="divided"
-        />
-    <kiolk.github.com.timesheetprogressbar.TimeSheetBar
-        android:layout_margin="20dp"
-        android:id="@+id/time_bar_4"
-        android:layout_centerInParent="true"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="10dp" />
-</LinearLayout>
+        android:orientation="vertical">
+
+        <ProgressBar
+            style="@style/Bar1"
+            android:paddingLeft="40dp"/>
+
+        <kiolk.github.com.timesheetprogressbar.TimeSheetBar
+            app:isLabelUnder="true"
+            style="@style/Bar1"
+            app:maxBarHeight="40dp"
+            android:layout_width="300dp"
+            android:id="@+id/time_bar"
+            app:barType="overlaid" />
+
+        <ProgressBar
+            style="@style/Bar2"
+            android:progress="50" />
+
+        <kiolk.github.com.timesheetprogressbar.TimeSheetBar
+            style="@style/Bar2"
+            android:id="@+id/time_bar_1"
+            app:additionalNeedTrackTimeColor="@color/needAdditionalTrackColor"
+            app:barType="overlaid"
+            app:dayNeedTrackTimeColor="@color/currentUnTrackedColor"
+            app:moreCurrentDayTrakedTimeColor="@color/moreCurrentDayTrackedColor"
+            app:moreTrackedTimeColor="@color/moreTrackedTime"
+            app:trackedTimeColor="@color/trackedColor"
+            app:unTrackedTimeColor="@color/unTrackedColor" />
+
+        <ProgressBar
+            style="@style/Bar3"
+            android:progress="50" />
+
+        <kiolk.github.com.timesheetprogressbar.TimeSheetBar
+            android:id="@+id/time_bar_2"
+          style="@style/Bar3"
+            app:maxBarHeight="10dp"
+            app:additionalNeedTrackTimeColor="@color/needAdditionalTrackColor"
+            app:barType="overlaid"
+            app:dayNeedTrackTimeColor="@color/currentUnTrackedColor"
+            app:moreCurrentDayTrakedTimeColor="@color/moreCurrentDayTrackedColor"
+            app:moreTrackedTimeColor="@color/moreTrackedTime"
+            app:trackedTimeColor="@color/trackedColor"/>
+
+        <ProgressBar
+            style="@style/Bar4"
+            android:progress="50" />
+
+
+        <kiolk.github.com.timesheetprogressbar.TimeSheetBar
+            android:id="@+id/time_bar_3"
+            style="@style/Bar4"
+            app:additionalNeedTrackTimeColor="@color/needAdditionalTrackColor"
+            app:barTitle="test bar title"
+            app:barType="divided"
+            app:maxBarHeight="10dp"
+            app:dayNeedTrackTimeColor="@color/currentUnTrackedColor"
+            app:moreCurrentDayTrakedTimeColor="@color/moreCurrentDayTrackedColor"
+            app:moreTrackedTimeColor="@color/moreTrackedTime"
+            app:trackedTimeColor="@color/trackedColor"
+            app:unTrackedTimeColor="@color/unTrackedColor" />
+
+        <ProgressBar
+            style="@style/Bar5"
+            android:progress="50" />
+
+        <kiolk.github.com.timesheetprogressbar.TimeSheetBar
+            android:id="@+id/time_bar_4"
+            style="@style/Bar5" />
+
+        <ProgressBar
+            style="@style/Bar3"
+            android:progress="50" />
+    </LinearLayout>
+</ScrollView>

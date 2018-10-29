@@ -12,10 +12,12 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.RequiresApi;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
+/**
+ * @attr ref android.R.styleable#TimeSheetBar_isLabelUnder
+ */
 public class TimeSheetBar extends View {
 
     @ColorInt
@@ -34,6 +36,8 @@ public class TimeSheetBar extends View {
     public static final float ONE_HOUR = 3600f;
     public static final int DEFAULT_MAX_BAR_HEIGHT = 200;
     private static final String EMPTY_STRING = "";
+    public static final float MIN_PROGRESS_WIDTH = 200f;
+    public static final float MIN_PROGRESS_HEIGHT = 40f;
 
     private RectF mRectF;
     private Rect mTmpRect;
@@ -51,13 +55,12 @@ public class TimeSheetBar extends View {
     private float startPointX = 0;
     private float startPointY = 0;
 
-    private int widthRec;
-    private int heightRec;
-
     private int mBarType;
-    private float mProgressHeight = DEFAULT_MAX_BAR_HEIGHT;
+    private float mProgressHeight = MIN_PROGRESS_HEIGHT;
+    private float mProgressWidth = MIN_PROGRESS_WIDTH;
     private float mViewHeight;
     private float mViewWidth;
+    private boolean isLabelUnder;
 
     private int mTrackedTimeColor;
     private int mUnTrackedTimeColor;
@@ -229,6 +232,19 @@ public class TimeSheetBar extends View {
         this.mBarTitle = mBarTitle;
     }
 
+    public boolean isLabelUnder() {
+        return isLabelUnder;
+    }
+
+    /**
+     * Set possibility display labels for indicator under bar.
+     * @param labelUnder - if true try show under bar, else show information inside bar.
+     */
+    public void setLabelUnder(boolean labelUnder) {
+        isLabelUnder = labelUnder;
+        invalidate();
+    }
+
     private void init(AttributeSet attrs) {
 
         TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.TimeSheetBar, 0, 0);
@@ -241,8 +257,10 @@ public class TimeSheetBar extends View {
         mMoreCurrentDayTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_moreCurrentDayTrakedTimeColor, CURRENT_TODAY_TRACKED_DEFAULT_COLOR);
         mTextColor = typedArray.getColor(R.styleable.TimeSheetBar_barTextColor, TEXT_DEFAULT_COLOR);
         mStrokeColor = typedArray.getColor(R.styleable.TimeSheetBar_barStrokeColor, STROKE_DEFAULT_COLOR);
-        mProgressHeight = typedArray.getDimension(R.styleable.TimeSheetBar_maxBarHeight, DEFAULT_MAX_BAR_HEIGHT);
+        mProgressHeight = typedArray.getDimension(R.styleable.TimeSheetBar_maxBarHeight, MIN_PROGRESS_HEIGHT);
+        isLabelUnder = typedArray.getBoolean(R.styleable.TimeSheetBar_isLabelUnder, false);
         mBarTitle = typedArray.getString(R.styleable.TimeSheetBar_barTitle);
+
         mBarType = typedArray.getInt(R.styleable.TimeSheetBar_barType, BarType.DIVIDED.getType());
 
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -287,7 +305,8 @@ public class TimeSheetBar extends View {
         mStrokePaint.setStrokeWidth(1f);
         mStrokePaint.setColor(mStrokeColor);
 
-        mRectF = new RectF(0, heightRec, widthRec, 0);
+//        mRectF = new RectF(0, heightRec, widthRec, 0);
+        mRectF = new RectF(0, 0, 0, 0);
         mTmpRect = new Rect();
     }
 
@@ -318,16 +337,35 @@ public class TimeSheetBar extends View {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);
         int selectedHeight;
+        int selectedWidth;
+
+        switch (MeasureSpec.getMode(widthMeasureSpec)) {
+            case MeasureSpec.EXACTLY:
+                selectedWidth = width;
+                break;
+            case MeasureSpec.AT_MOST:
+                selectedWidth = (int) Math.min(width, MIN_PROGRESS_WIDTH);
+                break;
+            case MeasureSpec.UNSPECIFIED:
+                selectedWidth = width;
+                break;
+            default:
+                selectedWidth = width;
+        }
 
         switch (MeasureSpec.getMode(heightMeasureSpec)) {
             case MeasureSpec.EXACTLY:
-                selectedHeight = height;
+//                selectedHeight = height;
+                selectedHeight = (int) Math.min(height, getProgressHeight() * 3);
                 break;
             case MeasureSpec.AT_MOST:
                 selectedHeight = (int) Math.min(height, getProgressHeight() * 3);
                 break;
             case MeasureSpec.UNSPECIFIED:
-                selectedHeight = height;
+                selectedHeight = (int) Math.min(height, getProgressHeight() * 3);
+                if (selectedHeight < getProgressHeight() * 3) {
+                    selectedHeight = (int) (getProgressHeight() * 3);
+                }
                 break;
             default:
                 selectedHeight = height;
@@ -337,18 +375,18 @@ public class TimeSheetBar extends View {
         int paddingY = getPaddingBottom() + getPaddingTop();
         int paddingX = getPaddingLeft() + getPaddingRight();
         mViewHeight = selectedHeight - paddingY;
-        mViewWidth = width - paddingX;
+        mViewWidth = selectedWidth - paddingX;
 
         if (mViewHeight < getProgressHeight()) {
             setProgressHeight(mViewHeight);
         }
 
-        height = height - paddingY;
-        int size = (width > height) ? width : height;
-        heightRec = size;
-        widthRec = size;
+//        height = height - paddingY;
+//        int size = (width > height) ? width : height;
+//        heightRec = size;
+//        widthRec = size;
 
-        setMeasuredDimension(width, selectedHeight);
+        setMeasuredDimension(selectedWidth, selectedHeight);
     }
 
     @Override
@@ -435,6 +473,10 @@ public class TimeSheetBar extends View {
             return;
         }
 
+        if (mBarTitle == null) {
+            return;
+        }
+
         mTextPaint.setTextSize(mProgressHeight / 2);
         mTextPaint.getTextBounds(mBarTitle.toUpperCase(), 0, mBarTitle.length(), mTmpRect);
         float textWidth = mTmpRect.right - mTmpRect.left;
@@ -457,7 +499,7 @@ public class TimeSheetBar extends View {
     }
 
     private void attachText(Canvas canvas, float startBlockX, float endBlockX, long durationSeconds, float blockWidth) {
-        if (mProgressHeight < 40) {
+        if (mProgressHeight < 20) {
             return;
         }
         float textStartPoint;
@@ -466,13 +508,13 @@ public class TimeSheetBar extends View {
         Rect r = new Rect();
         mTextPaint.getTextBounds(text, 0, text.length(), r);
         float textHeight = r.bottom - r.top;
-        float textWidth = r.right -r.left;
+        float textWidth = r.right - r.left;
 
-        if(textWidth > blockWidth){
+        if (textWidth > blockWidth) {
             return;
         }
 
-        if (mViewHeight / 2 >= mProgressHeight) {
+        if (mViewHeight / 2 >= mProgressHeight && isLabelUnder) {
             textStartPoint = ((mViewHeight / 6) * 5) + textHeight / 2 + getPaddingTop();
         } else {
             textStartPoint = mViewHeight / 2 + textHeight / 2 + getPaddingTop();
