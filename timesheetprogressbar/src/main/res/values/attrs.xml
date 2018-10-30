@@ -7,6 +7,7 @@
         <attr name="moreCurrentDayTrakedTimeColor" format="color" />
         <attr name="dayNeedTrackTimeColor" format="color" />
         <attr name="additionalNeedTrackTimeColor" format="color" />
+        <attr name="moreThanMontTrackedTimeColor" format="color"/>
         <attr name="barType" format="enum">
             <enum name="overlaid" value="1" />
             <enum name="divided" value="0" />

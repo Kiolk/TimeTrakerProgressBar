@@ -26,9 +26,10 @@ public class TimeSheetBar extends View {
     public static final int NEED_TRACK_DEFAULT_COLOR = 0xFFff2c26;
     public static final int CURRENT_TODAY_NEED_TRACK_DEFAULT_COLOR = 0xFFff5926;
     public static final int MORE_TRACKED_DEFAULT_COLOR = 0xFF35a96f;
-    public static final int REQUEIRD_TRACK_DEFAULT_COLOR = 0xFFd0dbd0;
+    public static final int REQUIRED_TRACK_DEFAULT_COLOR = 0xFFd0dbd0;
     public static final int TEXT_DEFAULT_COLOR = 0xFF434744;
     public static final int STROKE_DEFAULT_COLOR = 0xFFd6d834;
+    public static final int MORE_THAN_MONTH_TRACKED_DEFAULT_COLOR = 0xFF092603;
 
     public static final float ROUND_X = 10f;
     public static final float ROUND_Y = 10f;
@@ -42,6 +43,7 @@ public class TimeSheetBar extends View {
     public static final int DEFAULT_ANIMATION_DURATION_MILLISECONDS = 1000;
 
     private RectF mRectF;
+    private Path mShapePath;
     private Rect mTmpRect;
     private Paint mBackgroundPaint;
     private Paint mTrackedTimePaint;
@@ -49,10 +51,12 @@ public class TimeSheetBar extends View {
     private Paint mMoreTrackedTimePaint;
     private Paint mNeedTrackTimePaint;
     private Paint mMoreCurrentDayTrackedTimePaint;
+    private Paint mMoreThanMonthTrackedPaint;
     private Paint mLinePaint;
     private Paint mLabelPaint;
     private Paint mTextPaint;
     private Paint mStrokePaint;
+    private Paint mCloudBlockPaint;
 
     private float startPointX = 0;
     private float startPointY = 0;
@@ -72,6 +76,7 @@ public class TimeSheetBar extends View {
     private int mDayNeedTrackTimeColor;
     private int mMoreTrackedTimeColor;
     private int mMoreCurrentDayTrackedTimeColor;
+    private int mMoreThanMonthTrackedTimeColor;
     private int mTextColor;
     private int mStrokeColor;
 
@@ -85,11 +90,13 @@ public class TimeSheetBar extends View {
     private long mNeedTrackSeconds = 0;
     private long mCurrentTrackedSeconds = 0;
     private long mMoreTrackedSeconds = 0;
-    private long mCurrentNeedTrakSeconds = 0;
+    private long mCurrentNeedTrackSeconds = 0;
     private long mUnTrackedTime = 0;
+    private long mMoreThanMontTrackedSeconds = 0;
 
     private ObjectAnimator mAnimator;
     private float animationFactor = FINAL_ANIMATION_FACTOR_VALUE;
+    private boolean isCloudUp = false;
 
     public TimeSheetBar(Context context) {
         super(context);
@@ -217,6 +224,15 @@ public class TimeSheetBar extends View {
         this.mMoreCurrentDayTrackedTimeColor = mMoreCurrentDayTrackedTimeColor;
     }
 
+    public int getMoreThanMonthTrackedTimeColor() {
+        return mMoreThanMonthTrackedTimeColor;
+    }
+
+    public void setMoreThanMonthTrackedTimeColor(int color) {
+        this.mMoreThanMonthTrackedTimeColor = color;
+        invalidate();
+    }
+
     public int getTextColor() {
         return mTextColor;
     }
@@ -272,11 +288,12 @@ public class TimeSheetBar extends View {
         TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.TimeSheetBar, 0, 0);
 
         mTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_trackedTimeColor, TRACKED_TIME_DEFAULT_COLOR);
-        mUnTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_unTrackedTimeColor, REQUEIRD_TRACK_DEFAULT_COLOR);
+        mUnTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_unTrackedTimeColor, REQUIRED_TRACK_DEFAULT_COLOR);
         mDayNeedTrackTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_dayNeedTrackTimeColor, CURRENT_TODAY_NEED_TRACK_DEFAULT_COLOR);
         mNeedTrackTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_additionalNeedTrackTimeColor, NEED_TRACK_DEFAULT_COLOR);
         mMoreTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_moreTrackedTimeColor, MORE_TRACKED_DEFAULT_COLOR);
         mMoreCurrentDayTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_moreCurrentDayTrakedTimeColor, CURRENT_TODAY_TRACKED_DEFAULT_COLOR);
+        mMoreThanMonthTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_moreThanMontTrackedTimeColor, MORE_THAN_MONTH_TRACKED_DEFAULT_COLOR);
         mTextColor = typedArray.getColor(R.styleable.TimeSheetBar_barTextColor, TEXT_DEFAULT_COLOR);
         mStrokeColor = typedArray.getColor(R.styleable.TimeSheetBar_barStrokeColor, STROKE_DEFAULT_COLOR);
         mProgressHeight = typedArray.getDimension(R.styleable.TimeSheetBar_maxBarHeight, MIN_PROGRESS_HEIGHT);
@@ -305,6 +322,9 @@ public class TimeSheetBar extends View {
         mMoreCurrentDayTrackedTimePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mMoreCurrentDayTrackedTimePaint.setColor(mMoreCurrentDayTrackedTimeColor);
         mNeedTrackTimePaint.setStyle(Paint.Style.FILL);
+        mMoreThanMonthTrackedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mMoreThanMonthTrackedPaint.setStyle(Paint.Style.FILL);
+        mMoreThanMonthTrackedPaint.setColor(mMoreThanMonthTrackedTimeColor);
 
         mLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mLinePaint.setColor(Color.GRAY);
@@ -319,6 +339,10 @@ public class TimeSheetBar extends View {
         mLabelPaint.setColor(Color.YELLOW);
         mLabelPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
+        mCloudBlockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mCloudBlockPaint.setStyle(Paint.Style.FILL);
+        mCloudBlockPaint.setColor(Color.YELLOW);
+
         mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mTextPaint.setColor(mTextColor);
         mTextPaint.setStyle(Paint.Style.FILL);
@@ -332,12 +356,13 @@ public class TimeSheetBar extends View {
 //        mRectF = new RectF(0, heightRec, widthRec, 0);
         mRectF = new RectF(0, 0, 0, 0);
         mTmpRect = new Rect();
+        mShapePath = new Path();
 
         animated();
     }
 
     private void animated() {
-        if(!isAnimated){
+        if (!isAnimated) {
             return;
         }
 
@@ -352,18 +377,25 @@ public class TimeSheetBar extends View {
         mUnTrackedTime = mRequiredSeconds - mRequiredSecondsRelativeToday;
 
         if (trackedDiffTime > mTrackedSeconds) {
-            mCurrentNeedTrakSeconds = mStandardDayWorkDurationSeconds;
+            mCurrentNeedTrackSeconds = mStandardDayWorkDurationSeconds;
             mNeedTrackSeconds = trackedDiffTime - mTrackedSeconds;
         } else if (trackedDiffTime < mTrackedSeconds && mTrackedSeconds < mRequiredSecondsRelativeToday) {
             mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
             mCurrentTrackedSeconds = mTrackedSeconds - mTrackedBeforeTodaySeconds;
-            mCurrentNeedTrakSeconds = mStandardDayWorkDurationSeconds - mCurrentTrackedSeconds;
-        } else if (mTrackedSeconds > mRequiredSecondsRelativeToday) {
+            mCurrentNeedTrackSeconds = mStandardDayWorkDurationSeconds - mCurrentTrackedSeconds;
+        } else if (mTrackedSeconds > mRequiredSecondsRelativeToday && mTrackedSeconds < mRequiredSeconds) {
             mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
             mCurrentTrackedSeconds = mStandardDayWorkDurationSeconds;
             mMoreTrackedSeconds = mTrackedSeconds - mRequiredSecondsRelativeToday;
-            mCurrentNeedTrakSeconds = 0;
+            mCurrentNeedTrackSeconds = 0;
             mUnTrackedTime = mUnTrackedTime - mMoreTrackedSeconds;
+        } else if (mTrackedSeconds > mRequiredSeconds) {
+            mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
+            mCurrentTrackedSeconds = mStandardDayWorkDurationSeconds;
+            mMoreTrackedSeconds = mRequiredSeconds - mRequiredSecondsRelativeToday;
+            mCurrentNeedTrackSeconds = 0;
+            mUnTrackedTime = 0;
+            mMoreThanMontTrackedSeconds = mTrackedSeconds - mRequiredSeconds;
         }
     }
 
@@ -375,6 +407,9 @@ public class TimeSheetBar extends View {
         int height = MeasureSpec.getSize(heightMeasureSpec);
         int selectedHeight;
         int selectedWidth;
+
+        int paddingY = getPaddingBottom() + getPaddingTop();
+        int paddingX = getPaddingLeft() + getPaddingRight();
 
         switch (MeasureSpec.getMode(widthMeasureSpec)) {
             case MeasureSpec.EXACTLY:
@@ -393,24 +428,22 @@ public class TimeSheetBar extends View {
         switch (MeasureSpec.getMode(heightMeasureSpec)) {
             case MeasureSpec.EXACTLY:
 //                selectedHeight = height;
-                selectedHeight = (int) Math.min(height, getProgressHeight() * 3);
+                selectedHeight = (int) Math.min(height, getProgressHeight() * 3 + paddingY);
                 break;
             case MeasureSpec.AT_MOST:
                 selectedHeight = (int) Math.min(height, getProgressHeight() * 3);
                 break;
             case MeasureSpec.UNSPECIFIED:
-                selectedHeight = (int) Math.min(height, getProgressHeight() * 3);
-                if (selectedHeight < getProgressHeight() * 3) {
-                    selectedHeight = (int) (getProgressHeight() * 3);
-                }
+                selectedHeight = (int) Math.min(height, getProgressHeight() * 3 + paddingY);
+//                if (selectedHeight < getProgressHeight() * 3 + paddingY) {
+//                    selectedHeight = (int) (getProgressHeight() * 3 + paddingY);
+//                }
                 break;
             default:
                 selectedHeight = height;
                 break;
         }
 
-        int paddingY = getPaddingBottom() + getPaddingTop();
-        int paddingX = getPaddingLeft() + getPaddingRight();
         mViewHeight = selectedHeight - paddingY;
         mViewWidth = selectedWidth - paddingX;
 
@@ -430,6 +463,7 @@ public class TimeSheetBar extends View {
         float moreTrackedTimeBlockWidth = 0;
         float unTrackedTimeBlockWidth;
         float needCurrentTodayTrackBlockWidth;
+        float moreThanMonthTrackedBlockWidth = 0;
 
 
         if (mViewHeight / 3 < getProgressHeight()) {
@@ -444,7 +478,6 @@ public class TimeSheetBar extends View {
         needCurrentTodayTrackBlockWidth = calculateBlockWidth(mStandardDayWorkDurationSeconds);
         unTrackedTimeBlockWidth = calculateBlockWidth(mRequiredSeconds - mRequiredSecondsRelativeToday);
 
-
         if (trackedDiffTime > mTrackedSeconds) {
             needTrackBlockWidth = calculateBlockWidth(trackedDiffTime - mTrackedSeconds);
             trackedBlockWidth = calculateBlockWidth(mTrackedSeconds);
@@ -452,12 +485,19 @@ public class TimeSheetBar extends View {
             trackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mTrackedSeconds - trackedDiffTime));
             moreCurrentDayTrackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds));
             needCurrentTodayTrackBlockWidth = calculateBlockWidth(mRequiredSecondsRelativeToday - mTrackedSeconds);
-        } else if (mTrackedSeconds > mRequiredSecondsRelativeToday) {
+        } else if (mTrackedSeconds > mRequiredSecondsRelativeToday && mTrackedSeconds < mRequiredSeconds) {
             trackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mTrackedSeconds - trackedDiffTime));
             moreCurrentDayTrackedBlockWidth = calculateBlockWidth(mStandardDayWorkDurationSeconds);
             moreTrackedTimeBlockWidth = calculateBlockWidth(mTrackedSeconds - mRequiredSecondsRelativeToday);
             unTrackedTimeBlockWidth = calculateBlockWidth(mRequiredSeconds - mTrackedSeconds);
             needCurrentTodayTrackBlockWidth = 0;
+        } else if (mTrackedSeconds > mRequiredSeconds) {
+            trackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mTrackedSeconds - trackedDiffTime));
+            moreCurrentDayTrackedBlockWidth = calculateBlockWidth(mStandardDayWorkDurationSeconds);
+            moreTrackedTimeBlockWidth = calculateBlockWidth(mRequiredSeconds - mRequiredSecondsRelativeToday);
+            unTrackedTimeBlockWidth = 0;
+            needCurrentTodayTrackBlockWidth = 0;
+            moreThanMonthTrackedBlockWidth = calculateBlockWidth(mTrackedSeconds - mRequiredSeconds);
         }
 
         drawViewBorder(canvas);
@@ -474,22 +514,25 @@ public class TimeSheetBar extends View {
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, moreCurrentDayTrackedBlockWidth, mMoreCurrentDayTrackedTimePaint);
                 attachText(canvas, shiftPosition - moreCurrentDayTrackedBlockWidth, moreCurrentDayTrackedBlockWidth, mCurrentTrackedSeconds, moreCurrentDayTrackedBlockWidth);
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentUnTrackPaint);
-                attachText(canvas, shiftPosition - needCurrentTodayTrackBlockWidth, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds, needCurrentTodayTrackBlockWidth);
-//                attachLable(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds);
+                attachText(canvas, shiftPosition - needCurrentTodayTrackBlockWidth, needCurrentTodayTrackBlockWidth, mCurrentNeedTrackSeconds, needCurrentTodayTrackBlockWidth);
+//                attachLable(canvas, shiftPosition, needCurrentTodayTrackBlockWidth, mCurrentNeedTrackSeconds);
 //                attachText(canvas, shiftPosition, moreTrackedTimeBlockWidth, mMoreTrackedSeconds, moreTrackedTimeBlockWidth );
                 shiftPosition = drawSingleBlock(canvas, shiftPosition, moreTrackedTimeBlockWidth, mMoreTrackedTimePaint);
-                attachText(canvas, shiftPosition - moreTrackedTimeBlockWidth, moreTrackedTimeBlockWidth, mMoreTrackedSeconds,moreTrackedTimeBlockWidth);
-                drawSingleBlock(canvas, shiftPosition, unTrackedTimeBlockWidth, mBackgroundPaint);
-                attachText(canvas, shiftPosition, unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
+                attachText(canvas, shiftPosition - moreTrackedTimeBlockWidth, moreTrackedTimeBlockWidth, mMoreTrackedSeconds, moreTrackedTimeBlockWidth);
+                shiftPosition = drawSingleBlock(canvas, shiftPosition, unTrackedTimeBlockWidth, mBackgroundPaint);
+                attachText(canvas, shiftPosition - unTrackedTimeBlockWidth, unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
+                drawSingleBlock(canvas, shiftPosition, moreThanMonthTrackedBlockWidth, mMoreThanMonthTrackedPaint);
+                attachText(canvas, shiftPosition, moreThanMonthTrackedBlockWidth, mMoreThanMontTrackedSeconds, moreThanMonthTrackedBlockWidth);
                 break;
             case OVERLAID:
-                drawSingleBlock(canvas, getPaddingLeft(), mViewWidth, mBackgroundPaint);
                 float trackedBlockWidthFromStart = trackedBlockWidth;
                 float needTrackBlockWidthFromStart = trackedBlockWidthFromStart + needTrackBlockWidth;
                 float moreCurrentDayTrackedBlockWidthFromStart = needTrackBlockWidthFromStart + moreCurrentDayTrackedBlockWidth;
                 float needCurrentTodayTrackBlockWidthFromStart = moreCurrentDayTrackedBlockWidthFromStart + needCurrentTodayTrackBlockWidth;
                 float moreTrackedTimeBlockWidthFromStart = needCurrentTodayTrackBlockWidthFromStart + moreTrackedTimeBlockWidth;
 
+                drawSingleBlock(canvas, getPaddingLeft(), mViewWidth, mMoreThanMonthTrackedPaint);
+                drawSingleBlock(canvas, getPaddingLeft(), mViewWidth - moreThanMonthTrackedBlockWidth, mBackgroundPaint);
                 drawSingleBlock(canvas, getPaddingLeft(), moreTrackedTimeBlockWidthFromStart, mMoreTrackedTimePaint);
                 drawSingleBlock(canvas, getPaddingLeft(), needCurrentTodayTrackBlockWidthFromStart, mCurrentUnTrackPaint);
                 drawSingleBlock(canvas, getPaddingLeft(), moreCurrentDayTrackedBlockWidthFromStart, mMoreCurrentDayTrackedTimePaint);
@@ -499,9 +542,10 @@ public class TimeSheetBar extends View {
                 attachText(canvas, getPaddingLeft(), trackedBlockWidth, mTrackedBeforeTodaySeconds, trackedBlockWidth);
                 attachText(canvas, getPaddingLeft() + trackedBlockWidth, needTrackBlockWidth, mNeedTrackSeconds, needTrackBlockWidth);
                 attachText(canvas, trackedBlockWidth + getPaddingLeft(), moreCurrentDayTrackedBlockWidth, mCurrentTrackedSeconds, moreCurrentDayTrackedBlockWidth);
-                attachText(canvas, getPaddingLeft() + trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth, needCurrentTodayTrackBlockWidth, mCurrentNeedTrakSeconds, needCurrentTodayTrackBlockWidth);
+                attachText(canvas, getPaddingLeft() + trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth, needCurrentTodayTrackBlockWidth, mCurrentNeedTrackSeconds, needCurrentTodayTrackBlockWidth);
                 attachText(canvas, trackedBlockWidth + moreCurrentDayTrackedBlockWidth + getPaddingLeft(), moreTrackedTimeBlockWidth, mMoreTrackedSeconds, moreTrackedTimeBlockWidth);
-                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + moreTrackedTimeBlockWidth + getPaddingLeft(), unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
+                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + needCurrentTodayTrackBlockWidth + moreTrackedTimeBlockWidth + getPaddingLeft(), unTrackedTimeBlockWidth, mUnTrackedTime, unTrackedTimeBlockWidth);
+                attachText(canvas, trackedBlockWidth + needTrackBlockWidth + moreCurrentDayTrackedBlockWidth + needCurrentTodayTrackBlockWidth + moreTrackedTimeBlockWidth + unTrackedTimeBlockWidth + getPaddingLeft(), moreThanMonthTrackedBlockWidth, mMoreThanMontTrackedSeconds, moreThanMonthTrackedBlockWidth);
                 break;
         }
 
@@ -539,7 +583,7 @@ public class TimeSheetBar extends View {
     }
 
     private void attachText(Canvas canvas, float startBlockX, float endBlockX, long durationSeconds, float blockWidth) {
-        if (mProgressHeight < 20) {
+        if (mProgressHeight < 40) {
             return;
         }
         float textStartPoint;
@@ -551,6 +595,9 @@ public class TimeSheetBar extends View {
         float textWidth = r.right - r.left;
 
         if (textWidth > blockWidth) {
+
+            drawAdditionalCloud(canvas, startBlockX + (endBlockX / 2), mViewHeight / 2 + getPaddingTop(), durationSeconds);
+//            drawAdditionalCloud(canvas, 70, 70, durationSeconds);
             return;
         }
 
@@ -562,7 +609,7 @@ public class TimeSheetBar extends View {
 
         mTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        if(isAnimated && animationFactor < FINAL_ANIMATION_FACTOR_VALUE){
+        if (isAnimated && animationFactor < FINAL_ANIMATION_FACTOR_VALUE) {
             return;
         }
 
@@ -608,5 +655,97 @@ public class TimeSheetBar extends View {
 
     private void drawSingleBlock(Canvas canvas, RectF block, Paint paint) {
         canvas.drawRoundRect(block, ROUND_X, ROUND_Y, paint);
+    }
+
+    private void drawAdditionalCloud(Canvas canvas, float blockCenterX, float centerY, long durationSeconds) {
+        if (mViewHeight / 3 < mProgressHeight || durationSeconds == 0 || animationFactor < FINAL_ANIMATION_FACTOR_VALUE) {
+            return;
+        }
+
+        float attachPointY = centerY;
+
+        float centerX = blockCenterX;
+        float cloudPadding = (mProgressHeight) / 10;
+        float cloudHeight = cloudPadding * 8;
+
+        if (isCloudUp) {
+            attachPointY += mProgressHeight / 2 + cloudPadding * 2;
+        } else {
+            attachPointY -= mProgressHeight / 2;
+        }
+
+        mShapePath.moveTo(blockCenterX, attachPointY);
+        mShapePath.lineTo(blockCenterX - cloudPadding, attachPointY - cloudPadding);
+        mShapePath.lineTo(blockCenterX, attachPointY - cloudPadding * 2);
+        mShapePath.lineTo(blockCenterX + cloudPadding, attachPointY - cloudPadding);
+        mShapePath.lineTo(blockCenterX, attachPointY);
+        mShapePath.close();
+
+        String text = String.valueOf(durationSeconds / ONE_HOUR) + " h";
+        Rect r = new Rect();
+        mTextPaint.getTextBounds(text, 0, text.length(), r);
+        float textHeight = r.bottom - r.top;
+        float textWidth = r.right - r.left;
+
+        mTextPaint.setTextAlign(Paint.Align.LEFT);
+
+        float startCloudX = centerX - textWidth * 0.75f;
+        float endCloudX = centerX + textWidth * 0.75f;
+
+        if(startCloudX < 0 ){
+            endCloudX = endCloudX - startCloudX + getPaddingLeft();
+            startCloudX = getPaddingLeft();
+        }
+
+        if(endCloudX > mViewWidth + getPaddingLeft()){
+            startCloudX = mViewWidth + getPaddingLeft() - (endCloudX - startCloudX) - cloudPadding;
+            endCloudX = mViewWidth + getPaddingLeft();
+        }
+
+        mRectF.left = startCloudX;
+        mRectF.right = endCloudX;
+
+        if (isCloudUp) {
+            mRectF.top = centerY + mProgressHeight / 2 + cloudPadding;
+            mRectF.bottom = centerY + mProgressHeight / 2 + cloudPadding + cloudHeight;
+        } else {
+            mRectF.top = centerY - mProgressHeight / 2 - cloudPadding - cloudHeight;
+            mRectF.bottom = centerY - mProgressHeight / 2 - cloudPadding;
+        }
+
+        canvas.drawPath(mShapePath, mCloudBlockPaint);
+        canvas.drawRoundRect(mRectF, ROUND_X, ROUND_Y, mCloudBlockPaint);
+
+        float textStartPoint;
+
+        if (isCloudUp) {
+            textStartPoint = centerY + mProgressHeight / 2 + cloudPadding + (cloudHeight - textHeight) / 2 + textHeight;
+        } else {
+            textStartPoint = centerY - mProgressHeight / 2 - cloudPadding - (cloudHeight - textHeight) / 2;
+        }
+        canvas.drawText(String.valueOf(durationSeconds / ONE_HOUR) + " h",
+                startCloudX + (endCloudX - startCloudX) / 2 - textWidth / 2,
+                textStartPoint,
+                mTextPaint);
+
+        isCloudUp = !isCloudUp;
+    }
+
+    @Override
+    public int getPaddingTop() {
+        int paddingY = super.getPaddingTop() + super.getPaddingBottom();
+        if(paddingY > getHeight() - mProgressHeight){
+            return  0;
+        }
+        return super.getPaddingTop();
+    }
+
+    @Override
+    public int getPaddingBottom() {
+        int paddingY = super.getPaddingTop() + super.getPaddingBottom();
+        if(paddingY > getHeight() - mProgressHeight){
+            return  0;
+        }
+        return super.getPaddingBottom();
     }
 }
