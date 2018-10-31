@@ -18,7 +18,7 @@ public class MainActivity2 extends AppCompatActivity {
     private static final int THREE_HOUR = 10800;
     private static final int WORK_DAY = 28800;
     private static final int WORK_MONTH = 633600;
-    private int trackedTime = WORK_DAY * 1 - THREE_HOUR;
+    private int trackedTime = WORK_DAY * 6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +30,7 @@ public class MainActivity2 extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                trackedTime += WORK_DAY;
+                trackedTime += 7200 * 1.75;
                 bar.setTrackedSeconds(trackedTime);
             }
         });
@@ -40,7 +40,7 @@ public class MainActivity2 extends AppCompatActivity {
 //        bar4 = findViewById(R.id.time_bar_4);
 //        bar4.setProgressHeight(200);
 
-        setBar(bar, WORK_MONTH,  trackedTime, WORK_DAY * 2);
+        setBar(bar, 662400,  trackedTime,  WORK_DAY * 8);
 //        setBar(bar1, WORK_MONTH, WORK_DAY * 8 + THREE_HOUR, WORK_DAY * 9);
 //        setBar(bar2, WORK_MONTH, WORK_DAY * 15  - THREE_HOUR * 2, WORK_DAY * 16);
 //        setBar(bar3, WORK_MONTH, WORK_DAY * 21 + THREE_HOUR * 4, WORK_DAY * 22);
@@ -51,6 +51,6 @@ public class MainActivity2 extends AppCompatActivity {
         bar.setRequiredSeconds(required);
         bar.setTrackedSeconds(tracked);
         bar.setRequiredSecondsRelativeToday(currentNeed);
-        bar.setStandardDayWorkDurationSeconds(THREE_HOUR * 2);
+        bar.setStandardDayWorkDurationSeconds(28800);
     }
 }

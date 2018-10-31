@@ -11,10 +11,10 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
-import android.os.Parcelable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -30,14 +30,13 @@ public class TimeSheetBar extends View {
     public static final int REQUIRED_TRACK_DEFAULT_COLOR = 0xFFd0dbd0;
     public static final int TEXT_DEFAULT_COLOR = 0xFF434744;
     public static final int STROKE_DEFAULT_COLOR = 0xFFd6d834;
-    public static final int MORE_THAN_MONTH_TRACKED_DEFAULT_COLOR = 0xFF092603;
+    public static final int MORE_THAN_MONTH_TRACKED_DEFAULT_COLOR = 0xFF426b39;
 
     public static final float ROUND_X = 10f;
     public static final float ROUND_Y = 10f;
     public static final long EIGHT_HOURS_WORK_DAY = 28800;
     public static final float ONE_HOUR = 3600f;
     public static final int DEFAULT_MAX_BAR_HEIGHT = 200;
-    private static final String EMPTY_STRING = "";
     public static final float MIN_PROGRESS_WIDTH = 200f;
     public static final float MIN_PROGRESS_HEIGHT = 40f;
     public static final int FINAL_ANIMATION_FACTOR_VALUE = 100;
@@ -45,7 +44,7 @@ public class TimeSheetBar extends View {
 
     private RectF mRectF;
     private Path mShapePath;
-    private Path mShapePath2;
+    private Path mPointerPath;
     private Rect mTmpRect;
     private Paint mBackgroundPaint;
     private Paint mTrackedTimePaint;
@@ -304,7 +303,7 @@ public class TimeSheetBar extends View {
         isLabelUnder = typedArray.getBoolean(R.styleable.TimeSheetBar_isLabelUnder, false);
         mBarTitle = typedArray.getString(R.styleable.TimeSheetBar_barTitle);
         isAnimated = typedArray.getBoolean(R.styleable.TimeSheetBar_isAnimated, false);
-         mAnimationDuration = typedArray.getInt(R.styleable.TimeSheetBar_animationDuration, DEFAULT_ANIMATION_DURATION_MILLISECONDS);
+        mAnimationDuration = typedArray.getInt(R.styleable.TimeSheetBar_animationDuration, DEFAULT_ANIMATION_DURATION_MILLISECONDS);
 
         mBarType = typedArray.getInt(R.styleable.TimeSheetBar_barType, BarType.DIVIDED.getType());
 
@@ -361,21 +360,16 @@ public class TimeSheetBar extends View {
         mStrokePaint.setStrokeWidth(1f);
         mStrokePaint.setColor(mStrokeColor);
 
-//        mRectF = new RectF(0, heightRec, widthRec, 0);
         mRectF = new RectF(0, 0, 0, 0);
         mTmpRect = new Rect();
         mShapePath = new Path();
-        mShapePath2 = new Path();
+        mPointerPath = new Path();
 
         animated();
-//        invalidate();
     }
 
     private void animated() {
         if (!isAnimated) {
-//            mAnimator = ObjectAnimator.ofFloat(this, "animationFactor", FINAL_ANIMATION_FACTOR_VALUE);
-//            mAnimator.setDuration(10);
-//            mAnimator.start();
             return;
         }
 
@@ -394,10 +388,17 @@ public class TimeSheetBar extends View {
         mCurrentNeedTrackSeconds = 0;
         mMoreThanMontTrackedSeconds = 0;
 
+        if (mRequiredSeconds == mRequiredSecondsRelativeToday && mTrackedSeconds <= mRequiredSeconds) {
+            mNeedTrackSeconds = mRequiredSeconds - mTrackedSeconds;
+            return;
+        }
+
         if (trackedDiffTime > mTrackedSeconds) {
             mCurrentNeedTrackSeconds = mStandardDayWorkDurationSeconds;
             mNeedTrackSeconds = trackedDiffTime - mTrackedSeconds;
-        } else if (trackedDiffTime < mTrackedSeconds && mTrackedSeconds < mRequiredSecondsRelativeToday) {
+        } else if (trackedDiffTime == mTrackedSeconds) {
+            mCurrentNeedTrackSeconds = mStandardDayWorkDurationSeconds;
+        } else if (trackedDiffTime <= mTrackedSeconds && mTrackedSeconds <= mRequiredSecondsRelativeToday) {
             mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
             mCurrentTrackedSeconds = mTrackedSeconds - mTrackedBeforeTodaySeconds;
             mCurrentNeedTrackSeconds = mStandardDayWorkDurationSeconds - mCurrentTrackedSeconds;
@@ -407,7 +408,7 @@ public class TimeSheetBar extends View {
             mMoreTrackedSeconds = mTrackedSeconds - mRequiredSecondsRelativeToday;
             mCurrentNeedTrackSeconds = 0;
             mUnTrackedTime = mUnTrackedTime - mMoreTrackedSeconds;
-        } else if (mTrackedSeconds > mRequiredSeconds) {
+        } else if (mTrackedSeconds >= mRequiredSeconds) {
             mTrackedBeforeTodaySeconds = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
             mCurrentTrackedSeconds = mStandardDayWorkDurationSeconds;
             mMoreTrackedSeconds = mRequiredSeconds - mRequiredSecondsRelativeToday;
@@ -445,7 +446,6 @@ public class TimeSheetBar extends View {
 
         switch (MeasureSpec.getMode(heightMeasureSpec)) {
             case MeasureSpec.EXACTLY:
-//                selectedHeight = height;
                 selectedHeight = (int) Math.min(height, getProgressHeight() * 3 + paddingY);
                 break;
             case MeasureSpec.AT_MOST:
@@ -496,11 +496,15 @@ public class TimeSheetBar extends View {
         trackedBlockWidth = calculateBlockWidth(mTrackedSeconds);
         needCurrentTodayTrackBlockWidth = calculateBlockWidth(mStandardDayWorkDurationSeconds);
         unTrackedTimeBlockWidth = calculateBlockWidth(mRequiredSeconds - mRequiredSecondsRelativeToday);
-
-        if (trackedDiffTime > mTrackedSeconds) {
+        if (mRequiredSeconds == mRequiredSecondsRelativeToday && mTrackedSeconds <= mRequiredSeconds) {
+            needCurrentTodayTrackBlockWidth = calculateBlockWidth(0);
+            needTrackBlockWidth = calculateBlockWidth(mRequiredSeconds - mTrackedSeconds);
+            unTrackedTimeBlockWidth = 0;
+        } else if (trackedDiffTime > mTrackedSeconds) {
             needTrackBlockWidth = calculateBlockWidth(trackedDiffTime - mTrackedSeconds);
             trackedBlockWidth = calculateBlockWidth(mTrackedSeconds);
-        } else if (trackedDiffTime < mTrackedSeconds && mTrackedSeconds < mRequiredSecondsRelativeToday) {
+        } else if (trackedDiffTime == mTrackedSeconds) {
+        } else if (trackedDiffTime <= mTrackedSeconds && mTrackedSeconds <= mRequiredSecondsRelativeToday) {
             trackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mTrackedSeconds - trackedDiffTime));
             moreCurrentDayTrackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds));
             needCurrentTodayTrackBlockWidth = calculateBlockWidth(mRequiredSecondsRelativeToday - mTrackedSeconds);
@@ -510,7 +514,7 @@ public class TimeSheetBar extends View {
             moreTrackedTimeBlockWidth = calculateBlockWidth(mTrackedSeconds - mRequiredSecondsRelativeToday);
             unTrackedTimeBlockWidth = calculateBlockWidth(mRequiredSeconds - mTrackedSeconds);
             needCurrentTodayTrackBlockWidth = 0;
-        } else if (mTrackedSeconds > mRequiredSeconds) {
+        } else if (mTrackedSeconds >= mRequiredSeconds) {
             trackedBlockWidth = calculateBlockWidth(mTrackedSeconds - (mTrackedSeconds - trackedDiffTime));
             moreCurrentDayTrackedBlockWidth = calculateBlockWidth(mStandardDayWorkDurationSeconds);
             moreTrackedTimeBlockWidth = calculateBlockWidth(mRequiredSeconds - mRequiredSecondsRelativeToday);
@@ -608,15 +612,13 @@ public class TimeSheetBar extends View {
         float textStartPoint;
         mTextPaint.setTextSize(mProgressHeight / 2);
         String text = String.valueOf(durationSeconds / ONE_HOUR) + " h";
-        Rect r = new Rect();
-        mTextPaint.getTextBounds(text, 0, text.length(), r);
-        float textHeight = r.bottom - r.top;
-        float textWidth = r.right - r.left;
+        mTextPaint.getTextBounds(text, 0, text.length(), mTmpRect);
+        float textHeight = mTmpRect.bottom - mTmpRect.top;
+        float textWidth = mTmpRect.right - mTmpRect.left;
 
         if (textWidth > blockWidth) {
 
             drawAdditionalCloud(canvas, startBlockX + (endBlockX / 2), mViewHeight / 2 + getPaddingTop(), durationSeconds);
-//            drawAdditionalCloud(canvas, 70, 70, durationSeconds);
             return;
         }
 
@@ -654,11 +656,9 @@ public class TimeSheetBar extends View {
         mRectF.left = startPoint;
         mRectF.top = (mViewHeight / 2) - (getProgressHeight() / 2) + getPaddingTop();
 
-        float rightBorder = startPoint;
-        rightBorder = startPoint + blockWidth * (animationFactor / 100);
+        float rightBorder = startPoint + blockWidth * (animationFactor / 100);
 
         mRectF.right = rightBorder;
-
 
         mRectF.bottom = mRectF.top + getProgressHeight();
 
@@ -681,6 +681,10 @@ public class TimeSheetBar extends View {
             return;
         }
 
+        if (blockCounter == 0) {
+            isCloudUp = false;
+        }
+
         float attachPointY = centerY;
 
         float centerX = blockCenterX;
@@ -700,40 +704,39 @@ public class TimeSheetBar extends View {
         mShapePath.lineTo(blockCenterX, attachPointY);
         mShapePath.close();
 
-        mShapePath2 = new Path();
-        if(isCloudUp){
-            mShapePath2.moveTo(blockCenterX, attachPointY - cloudPadding * 2);
-            mShapePath2.lineTo(blockCenterX + cloudPadding, attachPointY - cloudPadding);
-            mShapePath2.lineTo(blockCenterX, attachPointY - cloudPadding * 2);
-            mShapePath2.lineTo(blockCenterX - cloudPadding, attachPointY - cloudPadding);
-            mShapePath2.lineTo(blockCenterX, attachPointY - cloudPadding * 2);
-            mShapePath2.close();
-        }else {
-            mShapePath2.moveTo(blockCenterX, attachPointY);
-            mShapePath2.lineTo(blockCenterX - cloudPadding, attachPointY - cloudPadding);
-            mShapePath2.lineTo(blockCenterX, attachPointY);
-            mShapePath2.lineTo(blockCenterX + cloudPadding, attachPointY - cloudPadding);
-            mShapePath2.lineTo(blockCenterX, attachPointY);
-            mShapePath2.close();
+        mPointerPath = new Path();
+        if (isCloudUp) {
+            mPointerPath.moveTo(blockCenterX, attachPointY - cloudPadding * 2);
+            mPointerPath.lineTo(blockCenterX + cloudPadding, attachPointY - cloudPadding);
+            mPointerPath.lineTo(blockCenterX, attachPointY - cloudPadding * 2);
+            mPointerPath.lineTo(blockCenterX - cloudPadding, attachPointY - cloudPadding);
+            mPointerPath.lineTo(blockCenterX, attachPointY - cloudPadding * 2);
+            mPointerPath.close();
+        } else {
+            mPointerPath.moveTo(blockCenterX, attachPointY);
+            mPointerPath.lineTo(blockCenterX - cloudPadding, attachPointY - cloudPadding);
+            mPointerPath.lineTo(blockCenterX, attachPointY);
+            mPointerPath.lineTo(blockCenterX + cloudPadding, attachPointY - cloudPadding);
+            mPointerPath.lineTo(blockCenterX, attachPointY);
+            mPointerPath.close();
         }
 
         String text = String.valueOf(durationSeconds / ONE_HOUR) + " h";
-        Rect r = new Rect();
-        mTextPaint.getTextBounds(text, 0, text.length(), r);
-        float textHeight = r.bottom - r.top;
-        float textWidth = r.right - r.left;
+        mTextPaint.getTextBounds(text, 0, text.length(), mTmpRect);
+        float textHeight = mTmpRect.bottom - mTmpRect.top;
+        float textWidth = mTmpRect.right - mTmpRect.left;
 
         mTextPaint.setTextAlign(Paint.Align.LEFT);
 
         float startCloudX = centerX - textWidth * 0.75f;
         float endCloudX = centerX + textWidth * 0.75f;
 
-        if(startCloudX < 0 || startCloudX - getPaddingLeft() < 0){
+        if (startCloudX < 0 || startCloudX - getPaddingLeft() < 0) {
             endCloudX = endCloudX - startCloudX + getPaddingLeft();
             startCloudX = getPaddingLeft();
         }
 
-        if(endCloudX > mViewWidth + getPaddingLeft()){
+        if (endCloudX > mViewWidth + getPaddingLeft()) {
             startCloudX = mViewWidth + getPaddingLeft() - (endCloudX - startCloudX) - cloudPadding;
             endCloudX = mViewWidth + getPaddingLeft();
         }
@@ -749,9 +752,9 @@ public class TimeSheetBar extends View {
             mRectF.bottom = centerY - mProgressHeight / 2 - cloudPadding;
         }
 
-        if(blockCounter < 2) {
+        if (blockCounter < 2) {
             canvas.drawPath(mShapePath, mCloudBlockPaint);
-            canvas.drawPath(mShapePath2, mCloudBlockStrokePaint);
+            canvas.drawPath(mPointerPath, mCloudBlockStrokePaint);
 
             float textStartPoint;
 
@@ -774,8 +777,8 @@ public class TimeSheetBar extends View {
     @Override
     public int getPaddingTop() {
         int paddingY = super.getPaddingTop() + super.getPaddingBottom();
-        if(paddingY > getHeight() - mProgressHeight){
-            return  0;
+        if (paddingY > getHeight() - mProgressHeight) {
+            return 0;
         }
         return super.getPaddingTop();
     }
@@ -783,8 +786,8 @@ public class TimeSheetBar extends View {
     @Override
     public int getPaddingBottom() {
         int paddingY = super.getPaddingTop() + super.getPaddingBottom();
-        if(paddingY > getHeight() - mProgressHeight){
-            return  0;
+        if (paddingY > getHeight() - mProgressHeight) {
+            return 0;
         }
         return super.getPaddingBottom();
     }
@@ -795,15 +798,5 @@ public class TimeSheetBar extends View {
         calculateTimersSeconds();
 
         super.invalidate();
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Parcelable state) {
-        super.onRestoreInstanceState(state);
-    }
-
-    @Override
-    protected Parcelable onSaveInstanceState() {
-        return super.onSaveInstanceState();
     }
 }
