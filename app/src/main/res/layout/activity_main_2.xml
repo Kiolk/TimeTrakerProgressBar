@@ -18,22 +18,46 @@
             style="@style/Bar1"
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            app:maxBarHeight="20dp"
             android:paddingLeft="20dp"
-            android:paddingRight="20dp"
             android:paddingTop="5dp"
+            android:paddingRight="20dp"
             android:paddingBottom="15dp"
             app:animationDuration="2000"
             app:barType="overlaid"
             app:isAnimated="false"
-            app:isLabelUnder="false"/>
+            app:isLabelUnder="false"
+            app:maxBarHeight="20dp"
+            app:smallestUnitValue="3600"
+            app:valueUnit="h" />
 
         <Button
-            android:layout_gravity="center"
             android:id="@+id/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="add day"/>
+            android:layout_gravity="center"
+            android:text="add day" />
+
+        <kiolk.github.com.timesheetprogressbar.TimeSheetBar
+            android:id="@+id/time_bar_2"
+            style="@style/Bar1"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:paddingLeft="30dp"
+            android:paddingTop="5dp"
+            android:paddingRight="20dp"
+            android:paddingBottom="15dp"
+            app:animationDuration="2000"
+            app:barType="divided"
+            app:isAnimated="true"
+            app:isLabelUnder="false"
+            app:maxBarHeight="20dp" />
+
+        <Button
+            android:id="@+id/button_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="add pages" />
 
     </LinearLayout>
 </ScrollView>

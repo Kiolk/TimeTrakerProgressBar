@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -49,6 +49,30 @@
         <item name="android:paddingRight">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:layout_height">50dp</item>
+    </style>
+
+    <style name="ImageStyle">
+        <item name="android:minHeight">100dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">30dp</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="ImageStyleCons">
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_marginRight">5dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">150dp</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="TextStyle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:textSize">24sp</item>
     </style>
 
 </resources>

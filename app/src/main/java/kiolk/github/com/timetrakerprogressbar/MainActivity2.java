@@ -5,12 +5,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
+import java.util.Random;
+
 import kiolk.github.com.timesheetprogressbar.TimeSheetBar;
 
 public class MainActivity2 extends AppCompatActivity {
 
     private TimeSheetBar bar;
     private Button button;
+
+    private TimeSheetBar bar2;
+    private Button button2;
 //    private TimeSheetBar bar1;
 //    private TimeSheetBar bar2;
 //    private TimeSheetBar bar3;
@@ -26,6 +31,25 @@ public class MainActivity2 extends AppCompatActivity {
         setContentView(R.layout.activity_main_2);
         bar = findViewById(R.id.time_bar);
         button = findViewById(R.id.button);
+
+        bar2 = findViewById(R.id.time_bar_2);
+        button2 = findViewById(R.id.button_2);
+
+        bar2.setTrackedSeconds(10);
+        bar2.setStandardDayWorkDurationSeconds(55);
+        bar2.setRequiredSeconds(1000);
+        bar2.setRequiredSecondsRelativeToday(270);
+        bar2.setSmallestHoleUnit(1);
+        bar2.setValueUnit("pages");
+        bar2.setBarAnimated(true);
+
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                long changeTracked = bar2.getTrackedSeconds() + new Random().nextInt(55);
+                bar2.setTrackedSeconds(changeTracked);
+            }
+        });
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override

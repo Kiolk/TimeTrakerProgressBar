@@ -14,8 +14,9 @@ import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
+
+import java.util.Locale;
 
 /**
  */
@@ -31,16 +32,17 @@ public class TimeSheetBar extends View {
     public static final int TEXT_DEFAULT_COLOR = 0xFF434744;
     public static final int STROKE_DEFAULT_COLOR = 0xFFd6d834;
     public static final int MORE_THAN_MONTH_TRACKED_DEFAULT_COLOR = 0xFF426b39;
+    public static final float ONE_HOUR_SECONDS = 3600f;
 
     public static final float ROUND_X = 10f;
     public static final float ROUND_Y = 10f;
     public static final long EIGHT_HOURS_WORK_DAY = 28800;
-    public static final float ONE_HOUR = 3600f;
-    public static final int DEFAULT_MAX_BAR_HEIGHT = 200;
+    public static final float DEFAULT_SMALLEST_HOLE_UNIT = 3600f;
     public static final float MIN_PROGRESS_WIDTH = 200f;
     public static final float MIN_PROGRESS_HEIGHT = 40f;
     public static final int FINAL_ANIMATION_FACTOR_VALUE = 100;
     public static final int DEFAULT_ANIMATION_DURATION_MILLISECONDS = 1000;
+    public static final String ONE_HOUR_UNIT = "h";
 
     private RectF mRectF;
     private Path mShapePath;
@@ -69,6 +71,7 @@ public class TimeSheetBar extends View {
     private float mProgressWidth = MIN_PROGRESS_WIDTH;
     private float mViewHeight;
     private float mViewWidth;
+    private float mSmallestHoleUnit = DEFAULT_SMALLEST_HOLE_UNIT;
     private boolean isLabelUnder;
     private boolean isAnimated;
 
@@ -87,6 +90,7 @@ public class TimeSheetBar extends View {
     private long mRequiredSecondsRelativeToday = EIGHT_HOURS_WORK_DAY;
     private long mStandardDayWorkDurationSeconds = EIGHT_HOURS_WORK_DAY;
     private String mBarTitle = "";
+    private String mValueUnit = ONE_HOUR_UNIT;
 
     private long mTrackedBeforeTodaySeconds = 0;
     private long mNeedTrackSeconds = 0;
@@ -123,13 +127,12 @@ public class TimeSheetBar extends View {
     }
 
     public long getTrackedSeconds() {
-        invalidate();
         return mTrackedSeconds;
     }
 
     public void setTrackedSeconds(long mTrackedSeconds) {
-        invalidate();
         this.mTrackedSeconds = mTrackedSeconds;
+        invalidate();
     }
 
     public void setTrackedSeconds(int mTrackedSeconds) {
@@ -142,8 +145,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setRequiredSeconds(long mRequiredSeconds) {
-        invalidate();
         this.mRequiredSeconds = mRequiredSeconds;
+        invalidate();
     }
 
     public long getRequiredSecondsRelativeToday() {
@@ -151,8 +154,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setRequiredSecondsRelativeToday(long mRequiredSecondsRelativeToday) {
-        invalidate();
         this.mRequiredSecondsRelativeToday = mRequiredSecondsRelativeToday;
+        invalidate();
     }
 
     public long getStandardDayWorkDurationSeconds() {
@@ -160,8 +163,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setStandardDayWorkDurationSeconds(long mStandardDayWorkDurationSeconds) {
-        invalidate();
         this.mStandardDayWorkDurationSeconds = mStandardDayWorkDurationSeconds;
+        invalidate();
     }
 
     public float getProgressHeight() {
@@ -169,8 +172,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setProgressHeight(float mProgressHeight) {
-        invalidate();
         this.mProgressHeight = mProgressHeight;
+        invalidate();
     }
 
     public int getTrackedTimeColor() {
@@ -178,8 +181,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setTrackedTimeColor(int mTrackedTimeColor) {
-        invalidate();
         this.mTrackedTimeColor = mTrackedTimeColor;
+        invalidate();
     }
 
     public int getUnTrackedTimeColor() {
@@ -187,8 +190,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setUnTrackedTimeColor(int mUnTrackedTimeColor) {
-        invalidate();
         this.mUnTrackedTimeColor = mUnTrackedTimeColor;
+        invalidate();
     }
 
     public int getNeedTrackTimeColor() {
@@ -196,8 +199,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setNeedTrackTimeColor(int mNeedTrackTimeColor) {
-        invalidate();
         this.mNeedTrackTimeColor = mNeedTrackTimeColor;
+        invalidate();
     }
 
     public int getDayNeedTrackTimeColor() {
@@ -205,8 +208,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setDayNeedTrackTimeColor(int mDayNeedTrackTimeColor) {
-        invalidate();
         this.mDayNeedTrackTimeColor = mDayNeedTrackTimeColor;
+        invalidate();
     }
 
     public int getMoreTrackedTimeColor() {
@@ -214,8 +217,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setMoreTrackedTimeColor(int mMoreTrackedTimeColor) {
-        invalidate();
         this.mMoreTrackedTimeColor = mMoreTrackedTimeColor;
+        invalidate();
     }
 
     public int getMoreCurrentDayTrackedTimeColor() {
@@ -223,8 +226,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setMoreCurrentDayTrackedTimeColor(int mMoreCurrentDayTrackedTimeColor) {
-        invalidate();
         this.mMoreCurrentDayTrackedTimeColor = mMoreCurrentDayTrackedTimeColor;
+        invalidate();
     }
 
     public int getMoreThanMonthTrackedTimeColor() {
@@ -241,8 +244,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setTextColor(int mTextColor) {
-        invalidate();
         this.mTextColor = mTextColor;
+        invalidate();
     }
 
     public int getStrokeColor() {
@@ -250,8 +253,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setStrokeColor(int mStrokeColor) {
-        invalidate();
         this.mStrokeColor = mStrokeColor;
+        invalidate();
     }
 
     public String getBarTitle() {
@@ -259,8 +262,8 @@ public class TimeSheetBar extends View {
     }
 
     public void setBarTitle(String mBarTitle) {
-        invalidate();
         this.mBarTitle = mBarTitle;
+        invalidate();
     }
 
     public boolean isLabelUnder() {
@@ -273,8 +276,8 @@ public class TimeSheetBar extends View {
      * @param labelUnder - if true try show under bar, else show information inside bar.
      */
     public void setLabelUnder(boolean labelUnder) {
-        isLabelUnder = labelUnder;
         invalidate();
+        isLabelUnder = labelUnder;
     }
 
     private float getAnimationFactor() {
@@ -282,8 +285,35 @@ public class TimeSheetBar extends View {
     }
 
     private void setAnimationFactor(float mAnimationFactor) {
-        invalidate();
         this.animationFactor = mAnimationFactor;
+        invalidate();
+    }
+
+    public float getSmallestHoleUnit() {
+        return mSmallestHoleUnit;
+    }
+
+    public void setSmallestHoleUnit(float mSmallestHoleUnit) {
+        this.mSmallestHoleUnit = mSmallestHoleUnit;
+        invalidate();
+    }
+
+    public String getValueUnit() {
+        return mValueUnit;
+    }
+
+    public void setValueUnit(String mValueUnit) {
+        this.mValueUnit = mValueUnit;
+        invalidate();
+    }
+
+    public boolean isBarAnimated() {
+        return isAnimated;
+    }
+
+    public void setBarAnimated(boolean animated) {
+        isAnimated = animated;
+        invalidate();
     }
 
     private void init(AttributeSet attrs) {
@@ -299,12 +329,14 @@ public class TimeSheetBar extends View {
         mMoreThanMonthTrackedTimeColor = typedArray.getColor(R.styleable.TimeSheetBar_moreThanMontTrackedTimeColor, MORE_THAN_MONTH_TRACKED_DEFAULT_COLOR);
         mTextColor = typedArray.getColor(R.styleable.TimeSheetBar_barTextColor, TEXT_DEFAULT_COLOR);
         mStrokeColor = typedArray.getColor(R.styleable.TimeSheetBar_barStrokeColor, STROKE_DEFAULT_COLOR);
+        mSmallestHoleUnit = typedArray.getFloat(R.styleable.TimeSheetBar_smallestUnitValue, DEFAULT_SMALLEST_HOLE_UNIT);
         mProgressHeight = typedArray.getDimension(R.styleable.TimeSheetBar_maxBarHeight, MIN_PROGRESS_HEIGHT);
         isLabelUnder = typedArray.getBoolean(R.styleable.TimeSheetBar_isLabelUnder, false);
         mBarTitle = typedArray.getString(R.styleable.TimeSheetBar_barTitle);
         isAnimated = typedArray.getBoolean(R.styleable.TimeSheetBar_isAnimated, false);
         mAnimationDuration = typedArray.getInt(R.styleable.TimeSheetBar_animationDuration, DEFAULT_ANIMATION_DURATION_MILLISECONDS);
-
+        String valueUnit = typedArray.getString(R.styleable.TimeSheetBar_valueUnit);
+        mValueUnit = valueUnit == null ? ONE_HOUR_UNIT : valueUnit;
         mBarType = typedArray.getInt(R.styleable.TimeSheetBar_barType, BarType.DIVIDED.getType());
 
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -485,11 +517,11 @@ public class TimeSheetBar extends View {
 
         blockCounter = 0;
 
-        if (mViewHeight / 3 < getProgressHeight()) {
-            startPointY = 0;
-        } else {
-            startPointY = getHeight() / 3;
-        }
+//        if (mViewHeight / 3 < getProgressHeight()) {
+//            startPointY = 0;
+//        } else {
+//            startPointY = getHeight() / 3;
+//        }
 
         long trackedDiffTime = mRequiredSecondsRelativeToday - mStandardDayWorkDurationSeconds;
 
@@ -611,8 +643,8 @@ public class TimeSheetBar extends View {
         }
         float textStartPoint;
         mTextPaint.setTextSize(mProgressHeight / 2);
-        String text = String.valueOf(durationSeconds / ONE_HOUR) + " h";
-        mTextPaint.getTextBounds(text, 0, text.length(), mTmpRect);
+        String inputText = formatLabel(durationSeconds);
+        mTextPaint.getTextBounds(inputText, 0, inputText.length(), mTmpRect);
         float textHeight = mTmpRect.bottom - mTmpRect.top;
         float textWidth = mTmpRect.right - mTmpRect.left;
 
@@ -634,7 +666,7 @@ public class TimeSheetBar extends View {
             return;
         }
 
-        canvas.drawText(String.valueOf(durationSeconds / ONE_HOUR) + " h",
+        canvas.drawText(inputText,
                 startBlockX + (endBlockX / 2),
                 textStartPoint,
                 mTextPaint);
@@ -721,8 +753,8 @@ public class TimeSheetBar extends View {
             mPointerPath.close();
         }
 
-        String text = String.valueOf(durationSeconds / ONE_HOUR) + " h";
-        mTextPaint.getTextBounds(text, 0, text.length(), mTmpRect);
+        String inputText = formatLabel(durationSeconds);
+        mTextPaint.getTextBounds(inputText, 0, inputText.length(), mTmpRect);
         float textHeight = mTmpRect.bottom - mTmpRect.top;
         float textWidth = mTmpRect.right - mTmpRect.left;
 
@@ -765,7 +797,7 @@ public class TimeSheetBar extends View {
             }
 
             canvas.drawRoundRect(mRectF, ROUND_X, ROUND_Y, mCloudBlockPaint);
-            canvas.drawText(String.valueOf(durationSeconds / ONE_HOUR) + " h",
+            canvas.drawText(inputText,
                     startCloudX + (endCloudX - startCloudX) / 2 - textWidth / 2,
                     textStartPoint,
                     mTextPaint);
@@ -798,5 +830,9 @@ public class TimeSheetBar extends View {
         calculateTimersSeconds();
 
         super.invalidate();
+    }
+
+    private String formatLabel(long labelValue) {
+        return String.format(Locale.getDefault(), "%.1f %s", labelValue / mSmallestHoleUnit, mValueUnit);
     }
 }

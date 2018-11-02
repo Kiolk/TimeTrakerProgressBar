@@ -9,4 +9,5 @@
     <color name="unTrackedColor">#878c87</color>
     <color name="moreTrackedTime">#04710a</color>
     <color name="moreCurrentDayTrackedColor">#45ebed</color>
+    <color name="background">#888888</color>
 </resources>

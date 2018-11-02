@@ -19,5 +19,7 @@
         <attr name="isLabelUnder" format="boolean" />
         <attr name="isAnimated" format="boolean" />
         <attr name="animationDuration" format="integer"/>
+        <attr name="smallestUnitValue" format="float"/>
+        <attr name="valueUnit" format="string"/>
     </declare-styleable>
 </resources>
